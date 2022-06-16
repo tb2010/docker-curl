@@ -1,0 +1,18 @@
+---
+dist: focal
+
+services:
+  - docker
+
+before_script: 
+  - mkdir -p ~/.docker/cli-plugins
+  - wget -O - https://github.com/docker/buildx/releases/download/v0.8.2/buildx-b0.8.2.linux-amd64 > ~/.docker/cli-plugin/docker-buildx
+  - chmod a+x ~/.docker/cli-plugin/docker-buildx
+  - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+  - docker buildx create --use --name mybuilder
+
+script:
+  - if [[ "$TRAVIS_TAG" =~ ^[0-9]+(\.[0-9]+){2}$ ]]; then
+    docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD};
+    docker buildx build --platform linux/amd64,linux/arm64 -t tb2010/docker-curl:$TRAVIS_TAG -t tb2010/docker-curl:latest --push .;
+    fi
